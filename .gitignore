@@ -1,0 +1,17 @@
+target
+
+/.classpath
+/.project
+/.settings
+/RUNNING_PID
+bin/
+libexec/
+project/project/
+
+# Scala-IDE specific
+/.idea
+/.idea_modules
+*.iml
+
+# MACOS specific
+.DS_Store
