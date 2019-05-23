@@ -3,7 +3,11 @@ package one.shn.brd.input
 import java.time.Instant
 import java.util.UUID
 
-case class Rating(user: UUID, product: String, score: Float, time: Instant)
+import one.shn.brd.types._
+
+import scala.language.postfixOps
+
+case class Rating(user: User, product: Product, score: Float, day: Long)
 
 object Rating {
   def fromLine(line: String): Rating = {
@@ -11,7 +15,9 @@ object Rating {
     Rating(
       user    = UUID fromString str(0),
       product = str(1),
-      score   = str(2).toFloat,
-      time    = Instant ofEpochMilli str(3).toLong)
+      score   = str(2) toFloat,
+      day    = Instant ofEpochMilli str(3).toLong toEpochDay)
   }
+
+
 }
