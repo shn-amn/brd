@@ -38,7 +38,7 @@ object Stats {
 object Users extends MutableRegistry[User]
 object Products extends MutableRegistry[Product]
 
-object Ratings extends MutableAggregation[(Int, Int), (Float, Long)] {
+object Ratings extends MutableAggregation[Long, (Float, Long)] {
   val penalties: Stream[Float] = 1 #:: (penalties map (_ * 0.95F))
 
   val addWithPenalties: ((Float, Long), (Float, Long)) => (Float, Long) = {
@@ -49,12 +49,16 @@ object Ratings extends MutableAggregation[(Int, Int), (Float, Long)] {
   }
 
   def aggregate(user: Int, product: Int, score: Float, day: Long): Unit =
-    aggregate((user, product), (score, day))(addWithPenalties)
+    aggregate(encodeKey(user, product), (score, day))(addWithPenalties)
 
-  def encodeAt(lastDay: Long): ((Int, Int), (Float, Long)) => String = {
-    case ((user, product), (score, day)) if score * penalties(lastDay - day toInt) >= 0.01 =>
+  def encodeAt(lastDay: Long): (Long, (Float, Long)) => String = {
+    case (compressedKey, (score, day)) if score * penalties(lastDay - day toInt) >= 0.01 =>
+      val (user, product) = decodeKey(compressedKey)
       s"$user,$product,${score * penalties(lastDay - day toInt)}\n"
     case _ =>
       ""
   }
+
+  private def encodeKey(up: (Int, Int)): Long = (up._1.toLong << 32) | up._2
+  private def decodeKey(k: Long): (Int, Int) = (k >> 32 toInt, k & 0xffffffffL toInt)
 }
